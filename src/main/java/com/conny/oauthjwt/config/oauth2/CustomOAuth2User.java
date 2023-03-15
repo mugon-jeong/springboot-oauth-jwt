@@ -9,6 +9,9 @@ import com.conny.oauthjwt.config.oauth2.model.OAuth2UserInfo;
 import com.conny.oauthjwt.module.auth.domain.MemberEntity;
 import com.conny.oauthjwt.module.auth.domain.constant.RoleType;
 
+import lombok.Getter;
+
+@Getter
 public class CustomOAuth2User extends DefaultOAuth2User {
 	private final MemberEntity memberEntity;
 

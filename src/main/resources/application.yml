@@ -29,7 +29,9 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id # 사용자 정보 고유값
-
+app:
+  oauth2:
+    authorized-redirect-uri: "http://localhost:8080"
 debug: false
 management:
   endpoints:

@@ -11,6 +11,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.conny.oauthjwt.config.oauth2.handler.OAuth2AuthenticationSuccessHandler;
 import com.conny.oauthjwt.config.oauth2.service.CustomOAuth2UserService;
 import com.conny.oauthjwt.config.util.CustomResponseUtil;
 
@@ -20,7 +21,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2UserService oAuth2UserService) throws
+	public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2UserService oAuth2UserService,
+		OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler) throws
 		Exception {
 		return http
 			.headers(configurer -> configurer.frameOptions().disable()) // iframe 허용안함
@@ -37,11 +39,9 @@ public class SecurityConfig {
 				CustomResponseUtil.fail(response, "권한이 없습니다", HttpStatus.FORBIDDEN)))
 			// OAuth2 filter chain configuration
 			.oauth2Login(oauth -> oauth
-					.userInfoEndpoint(userInfo -> userInfo
-						.userService(oAuth2UserService)
-					)
-				// TODO oauth2 인증 성공시 토큰 발급
-				// .successHandler()
+				.successHandler(oAuth2AuthenticationSuccessHandler)
+				.userInfoEndpoint(userInfo -> userInfo
+					.userService(oAuth2UserService))
 			)
 			.authorizeHttpRequests(auth -> {
 				auth.anyRequest().authenticated();
