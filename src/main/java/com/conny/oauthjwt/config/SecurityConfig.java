@@ -1,16 +1,19 @@
 package com.conny.oauthjwt.config;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.conny.oauthjwt.config.jwt.util.JwtUtil;
 import com.conny.oauthjwt.config.oauth2.handler.OAuth2AuthenticationSuccessHandler;
 import com.conny.oauthjwt.config.oauth2.service.CustomOAuth2UserService;
 import com.conny.oauthjwt.config.util.CustomResponseUtil;
@@ -18,8 +21,21 @@ import com.conny.oauthjwt.config.util.CustomResponseUtil;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
+@EnableConfigurationProperties({SecurityConfigProperties.class})
 @RequiredArgsConstructor
 public class SecurityConfig {
+	private final SecurityConfigProperties securityConfigProperties;
+
+	@Bean
+	public BCryptPasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
+
+	@Bean
+	public JwtUtil jwtUtil() {
+		return new JwtUtil(this.securityConfigProperties.jwt());
+	}
+
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomOAuth2UserService oAuth2UserService,
 		OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler) throws
@@ -39,9 +55,9 @@ public class SecurityConfig {
 				CustomResponseUtil.fail(response, "권한이 없습니다", HttpStatus.FORBIDDEN)))
 			// OAuth2 filter chain configuration
 			.oauth2Login(oauth -> oauth
-				.successHandler(oAuth2AuthenticationSuccessHandler)
 				.userInfoEndpoint(userInfo -> userInfo
 					.userService(oAuth2UserService))
+				.successHandler(oAuth2AuthenticationSuccessHandler)
 			)
 			.authorizeHttpRequests(auth -> {
 				auth.anyRequest().authenticated();

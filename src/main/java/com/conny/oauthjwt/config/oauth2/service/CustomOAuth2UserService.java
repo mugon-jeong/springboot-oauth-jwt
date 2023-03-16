@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import com.conny.oauthjwt.config.UserContext;
 import com.conny.oauthjwt.config.oauth2.CustomOAuth2User;
 import com.conny.oauthjwt.config.oauth2.model.OAuth2Provider;
 import com.conny.oauthjwt.config.oauth2.model.OAuth2UserInfo;
@@ -40,6 +41,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 			userInfo.getOAuth2Id(), provider);
 		MemberEntity memberEntity = optionalMember.orElseGet(
 			() -> memberRepository.save(MemberEntity.from(userInfo, Set.of(RoleType.USER))));
-		return new CustomOAuth2User(userInfo, memberEntity);
+		return new CustomOAuth2User(userInfo,
+			UserContext.of(memberEntity.getId(), memberEntity.getNickname(), provider, memberEntity.getRoleTypes()));
 	}
 }

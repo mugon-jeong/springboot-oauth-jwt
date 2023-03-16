@@ -1,13 +1,16 @@
 package com.conny.oauthjwt.module.auth.domain.constant;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
+@AllArgsConstructor
 @Getter
-@RequiredArgsConstructor
 public enum RoleType {
-	USER,
-	MANAGER,
-	DEVELOPER,
-	ADMIN
+	USER("ROLE_USER"),
+	MANAGER("ROLE_MANAGER"),
+	DEVELOPER("ROLE_DEVELOPER"),
+	ADMIN("ROLE_ADMIN");
+
+	private final String roleName;
+
 }

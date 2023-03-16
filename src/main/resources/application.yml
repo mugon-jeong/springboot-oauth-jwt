@@ -29,9 +29,18 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id # 사용자 정보 고유값
-app:
+security:
   oauth2:
-    authorized-redirect-uri: "http://localhost:8080"
+    authorized-redirect-uri: "http://localhost:8080" #OAuth 인증 결과 리다이렉트
+  jwt:
+    issuer: conny
+    client-secret: ${jwt.secret}
+    accessToken:
+      header: access
+      expiry-seconds: 86400 # 1day
+    refreshToken:
+      header: refresh
+      expiry-seconds: 2592000 # 30days
 debug: false
 management:
   endpoints:
