@@ -25,4 +25,9 @@ public class AuthController {
 		log.info("member :{}", member);
 		return "admin";
 	}
+
+	@GetMapping("/test")
+	public String test() {
+		return "anonymous";
+	}
 }

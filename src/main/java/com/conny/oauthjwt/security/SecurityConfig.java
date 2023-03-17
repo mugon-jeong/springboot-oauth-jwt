@@ -87,6 +87,7 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> {
 				auth.requestMatchers("/api/admin").hasRole("ADMIN");
 				auth.requestMatchers("/api/user").hasRole("USER");
+				auth.requestMatchers("/api/test").anonymous();
 				auth.anyRequest().authenticated();
 			})
 
