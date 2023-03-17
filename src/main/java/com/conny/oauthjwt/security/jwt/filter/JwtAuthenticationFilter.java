@@ -40,9 +40,7 @@ public class JwtAuthenticationFilter extends AbstractAuthenticationProcessingFil
 
 	@Override
 	public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws
-		AuthenticationException,
-		IOException,
-		ServletException {
+		AuthenticationException {
 		String authorizationHeader = request.getHeader(AUTHORIZATION_HEADER);
 		log.info("authorizationHeader :{}", authorizationHeader);
 		// 인증 헤더가 없는 경우 익명 사용자로 간주 (Anonymous Authentication)

@@ -20,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class JwtUtil {
-	private static final String DELIMITER = ",";
 	private final SecurityConfigProperties.JwtConfigure jwtConfigure;
 
 	public String create(UserContext userContext, TokenType tokenType) {
