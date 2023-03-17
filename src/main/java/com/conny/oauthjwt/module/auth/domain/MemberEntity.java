@@ -1,17 +1,19 @@
 package com.conny.oauthjwt.module.auth.domain;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.annotations.SQLDelete;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import com.conny.oauthjwt.common.AuditingFields;
-import com.conny.oauthjwt.config.oauth2.model.OAuth2Provider;
-import com.conny.oauthjwt.config.oauth2.model.OAuth2UserInfo;
 import com.conny.oauthjwt.module.auth.domain.constant.RoleType;
 import com.conny.oauthjwt.module.auth.domain.converter.RoleTypesConverter;
+import com.conny.oauthjwt.security.oauth2.model.OAuth2Provider;
+import com.conny.oauthjwt.security.oauth2.model.OAuth2UserInfo;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -37,7 +39,7 @@ import lombok.ToString;
 	@Index(columnList = "MEMBER_EMAIL"),
 	@Index(columnList = "MEMBER_OAUTH2_ID"),
 })
-@SQLDelete(sql = "UPDATE \"member\" SET deleted_at = NOW() where idx=?")
+@SQLDelete(sql = "UPDATE \"member\" SET deleted_at = NOW() where member_id=?")
 @Entity
 public class MemberEntity extends AuditingFields {
 
@@ -62,6 +64,9 @@ public class MemberEntity extends AuditingFields {
 	@Convert(converter = RoleTypesConverter.class)
 	@Column(nullable = false)
 	private Set<RoleType> roleTypes = new LinkedHashSet<>();
+
+	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+	private LocalDateTime deletedAt;
 
 	@Builder
 	public MemberEntity(String oauth2Id, String email, String nickname, OAuth2Provider provider,
