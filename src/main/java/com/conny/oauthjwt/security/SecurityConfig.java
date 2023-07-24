@@ -7,8 +7,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
@@ -29,6 +31,8 @@ import com.conny.oauthjwt.security.util.CustomResponseUtil;
 
 import jakarta.servlet.Filter;
 import lombok.RequiredArgsConstructor;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableConfigurationProperties({SecurityConfigProperties.class})
@@ -62,10 +66,12 @@ public class SecurityConfig {
 		OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler,
 		TokenService tokenService) throws
 		Exception {
+		AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);
 		return http
-			.headers(configurer -> configurer.frameOptions().disable()) // iframe 허용안함
+			.headers(configurer -> configurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)) // iframe 허용안함
 			.csrf(AbstractHttpConfigurer::disable) // csrf 허용안함
-			.cors(configurer -> configurer.configurationSource(configurationSource())) // cors 재정의
+			// by default uses a Bean by the name of corsConfigurationSource
+			.cors(withDefaults())
 			.sessionManagement(configurer -> configurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.formLogin(AbstractHttpConfigurer::disable)
 			.httpBasic(AbstractHttpConfigurer::disable)
@@ -83,22 +89,23 @@ public class SecurityConfig {
 				.successHandler(oAuth2AuthenticationSuccessHandler)
 			)
 			// 필터 적용
-			.apply(new CustomSecurityFilterManager(tokenService)).and()
 			.authorizeHttpRequests(auth -> {
 				auth.requestMatchers("/api/admin").hasRole("ADMIN");
 				auth.requestMatchers("/api/user").hasRole("USER");
 				auth.requestMatchers("/api/test").anonymous();
+				auth.requestMatchers("/api/login").permitAll();
 				auth.anyRequest().authenticated();
 			})
-
+			.addFilterBefore(jwtAuthenticationFilter(authenticationManager), OAuth2AuthorizationRequestRedirectFilter.class)
+			.addFilterBefore(new JwtRefreshFilter(tokenService, new AntPathRequestMatcher("/api/refresh")), JwtAuthenticationFilter.class)
 			.build();
 	}
 
-	public CorsConfigurationSource configurationSource() {
+	@Bean
+	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.addAllowedHeader("*");
 		configuration.addAllowedMethod("*");
-
 		configuration.addAllowedOriginPattern("*"); // 프론트 서버의 주소 등록
 		configuration.setAllowCredentials(true); // 클라이언트에서 쿠키 요청 허용
 		configuration.addExposedHeader("Authorization");
@@ -108,19 +115,16 @@ public class SecurityConfig {
 	}
 
 	// 모든 필터 등록은 여기서!! (AuthenticationManager 순환 의존 문제로 내부 클래스로 만들어진 듯, 추측임)
-	@RequiredArgsConstructor
-	public class CustomSecurityFilterManager extends AbstractHttpConfigurer<CustomSecurityFilterManager, HttpSecurity> {
-		private final TokenService tokenService;
-
-		@Override
-		public void configure(HttpSecurity http) throws Exception {
-			// log.debug("디버그 : SecurityConfig의 configure");
-			AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);
-			http.addFilterBefore(jwtAuthenticationFilter(authenticationManager),
-				OAuth2AuthorizationRequestRedirectFilter.class);
-			http.addFilterBefore(new JwtRefreshFilter(tokenService, new AntPathRequestMatcher("/api/refresh")),
-				JwtAuthenticationFilter.class);
-
-		}
-	}
+//	@RequiredArgsConstructor
+//	public class CustomSecurityFilterManager extends AbstractHttpConfigurer<CustomSecurityFilterManager, HttpSecurity> {
+//		private final TokenService tokenService;
+//
+//		@Override
+//		public void configure(HttpSecurity http) throws Exception {
+//			// log.debug("디버그 : SecurityConfig의 configure");
+//			AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);
+//			http.addFilterBefore(jwtAuthenticationFilter(authenticationManager), OAuth2AuthorizationRequestRedirectFilter.class);
+//			http.addFilterBefore(new JwtRefreshFilter(tokenService, new AntPathRequestMatcher("/api/refresh")), JwtAuthenticationFilter.class);
+//		}
+//	}
 }

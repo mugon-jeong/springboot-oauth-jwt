@@ -54,7 +54,6 @@ public class JwtUtil {
 
 	public int expired(TokenType tokenType) {
 		return switch (tokenType) {
-
 			case ACCESS_TOKEN -> jwtConfigure.accessToken().expirySeconds();
 			case REFRESH_TOKEN -> jwtConfigure.refreshToken().expirySeconds();
 		};
